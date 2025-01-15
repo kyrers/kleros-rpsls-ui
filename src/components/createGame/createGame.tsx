@@ -62,7 +62,7 @@ const CreateGame: FC = () => {
             name="move"
             value={selectedMove}
             onChange={(e) => setSelectedMove(Number(e.target.value) as Move)}
-            disabled={userGame}
+            disabled={!!userGame}
           >
             {moveOptions}
           </select>
@@ -77,7 +77,7 @@ const CreateGame: FC = () => {
             onChange={handleAddressChange}
             placeholder="Player 2 address"
             required
-            disabled={userGame}
+            disabled={!!userGame}
           />
           {player2 && !isValidAddress && <p>Please enter a valid address</p>}
         </div>
@@ -93,7 +93,7 @@ const CreateGame: FC = () => {
             onChange={(e) => setStake(Number(e.target.value))}
             placeholder="Enter ETH stake amount"
             required
-            disabled={userGame}
+            disabled={!!userGame}
           />
         </div>
 

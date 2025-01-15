@@ -1,6 +1,11 @@
 import { wagmiConfig } from "@/wagmiConfig";
 import { keccak256, parseEther } from "viem";
-import { deployContract, readContract, signMessage } from "wagmi/actions";
+import {
+  deployContract,
+  readContract,
+  signMessage,
+  waitForTransactionReceipt,
+} from "wagmi/actions";
 import { generateMessage } from "@/utils/message";
 import useGames from "./useGames";
 import RPSContract from "@/contracts/RPS.json";
@@ -50,15 +55,19 @@ export default function useCreateGame() {
         args: [args.move, salt],
       });
 
-      const contractAddress = await deployContract(wagmiConfig, {
+      const txHash = await deployContract(wagmiConfig, {
         abi: RPS_ABI,
         args: [commitmentHash, args.player2],
         bytecode: RPS_BYTECODE as `0x${string}`,
         value: parseEther(args.stake.toString()),
       });
 
+      const txReceipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash: txHash,
+      });
+
       addGame({
-        address: contractAddress,
+        address: txReceipt.contractAddress as `0x${string}`,
         player1: args.player1,
         player2: args.player2,
         stake: args.stake,

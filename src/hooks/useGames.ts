@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 
 interface Game {
-  address: string;
+  address: `0x${string}`;
   player1: string;
   player2: string;
   stake: number;
@@ -15,7 +15,7 @@ const GAMES_QUERY_KEY = ["games"];
 const useGames = () => {
   const queryClient = useQueryClient();
   const { address } = useAccount();
-  const { data: allGames = [] } = useQuery({
+  const { data: allGames = [] } = useQuery<Game[]>({
     queryKey: GAMES_QUERY_KEY,
     queryFn: () => {
       const stored = localStorage.getItem("allGames");
@@ -23,7 +23,7 @@ const useGames = () => {
     },
   });
 
-  const userGame = allGames.find(
+  const userGame: Game | undefined = allGames.find(
     (game: Game) => game.player1 === address || game.player2 === address
   );
 
