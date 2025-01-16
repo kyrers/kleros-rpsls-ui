@@ -1,20 +1,11 @@
-"use client";
-
-import { FC, useMemo, useState } from "react";
+import { FC, useState } from "react";
 import { useAccount } from "wagmi";
 import { isAddress } from "viem";
 import useCreateGame from "@/hooks/useCreateGame";
-import useGames from "@/hooks/useGames";
+import { Move } from "@/model/move";
+import MoveSelector from "../common/moveSelector";
 
-enum Move {
-  Rock = 1,
-  Paper = 2,
-  Scissors = 3,
-  Spock = 4,
-  Lizard = 5,
-}
-
-const CreateGame: FC = () => {
+const CreateGameForm: FC = () => {
   const [selectedMove, setSelectedMove] = useState<Move>(Move.Rock);
   const [player2, setPlayer2] = useState<string>("");
   const [stake, setStake] = useState<number>(0.01);
@@ -22,7 +13,6 @@ const CreateGame: FC = () => {
 
   const { address, isConnected } = useAccount();
   const { isDeploying, deployGame } = useCreateGame();
-  const { userGame } = useGames();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,34 +29,11 @@ const CreateGame: FC = () => {
     setIsValidAddress(isAddress(e.target.value) && e.target.value !== address);
   };
 
-  const moveOptions = useMemo(
-    () =>
-      Object.keys(Move)
-        .filter((key) => isNaN(Number(key))) // Do not display the numeric keys
-        .map((key) => (
-          <option key={key} value={Move[key as keyof typeof Move]}>
-            {key}
-          </option>
-        )),
-    []
-  );
-
   return (
     <div>
-      <h1>Create Game</h1>
+      <h2>Create Game</h2>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="move">Move:</label>
-          <select
-            id="move"
-            name="move"
-            value={selectedMove}
-            onChange={(e) => setSelectedMove(Number(e.target.value) as Move)}
-            disabled={!!userGame}
-          >
-            {moveOptions}
-          </select>
-        </div>
+        <MoveSelector value={selectedMove} onChange={setSelectedMove} />
 
         <div>
           <label htmlFor="player2">Player 2:</label>
@@ -77,7 +44,6 @@ const CreateGame: FC = () => {
             onChange={handleAddressChange}
             placeholder="Player 2 address"
             required
-            disabled={!!userGame}
           />
           {player2 && !isValidAddress && <p>Please enter a valid address</p>}
         </div>
@@ -93,18 +59,13 @@ const CreateGame: FC = () => {
             onChange={(e) => setStake(Number(e.target.value))}
             placeholder="Enter ETH stake amount"
             required
-            disabled={!!userGame}
           />
         </div>
 
         <button
           type="submit"
           disabled={
-            isDeploying ||
-            !isConnected ||
-            !isValidAddress ||
-            stake <= 0 ||
-            !!userGame
+            isDeploying || !isConnected || !isValidAddress || stake <= 0
           }
         >
           {isDeploying ? "Creating..." : "Create"}
@@ -114,4 +75,4 @@ const CreateGame: FC = () => {
   );
 };
 
-export default CreateGame;
+export default CreateGameForm;

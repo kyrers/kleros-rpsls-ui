@@ -11,12 +11,6 @@
   align-self: end;
 }
 
-.gameActionsPanel {
-  width: 100%;
-  display: flex;
-  justify-content: space-around;
-}
-
 @media (max-width: 600px) {
   .page {
     padding: 32px;

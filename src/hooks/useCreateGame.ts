@@ -68,8 +68,8 @@ export default function useCreateGame() {
 
       addGame({
         address: txReceipt.contractAddress as `0x${string}`,
-        player1: args.player1,
-        player2: args.player2,
+        player1: args.player1 as `0x${string}`,
+        player2: args.player2 as `0x${string}`,
         stake: args.stake,
         randomValue: formattedRandomValue,
       });

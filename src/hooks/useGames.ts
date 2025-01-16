@@ -3,8 +3,8 @@ import { useAccount } from "wagmi";
 
 interface Game {
   address: `0x${string}`;
-  player1: string;
-  player2: string;
+  player1: `0x${string}`;
+  player2: `0x${string}`;
   stake: number;
   randomValue: string;
 }
