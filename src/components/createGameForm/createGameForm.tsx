@@ -1,4 +1,5 @@
 import { FC, useState } from "react";
+import styles from "@/app/page.module.css";
 import { useAccount } from "wagmi";
 import { isAddress } from "viem";
 import useCreateGame from "@/hooks/useCreateGame";
@@ -30,9 +31,9 @@ const CreateGameForm: FC = () => {
   };
 
   return (
-    <div>
+    <div className={styles.formContainer}>
       <h2>Create Game</h2>
-      <form onSubmit={handleSubmit}>
+      <form className={styles.actionForm} onSubmit={handleSubmit}>
         <MoveSelector value={selectedMove} onChange={setSelectedMove} />
 
         <div>

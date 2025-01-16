@@ -11,6 +11,20 @@
   align-self: end;
 }
 
+.formContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.actionForm {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
 @media (max-width: 600px) {
   .page {
     padding: 32px;

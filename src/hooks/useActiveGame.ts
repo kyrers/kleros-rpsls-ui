@@ -1,16 +1,19 @@
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import RPSContract from "@/contracts/RPS.json";
 import useGames from "./useGames";
-import { parseEther } from "viem";
+import { keccak256, parseEther } from "viem";
 import { useState } from "react";
+import { signMessage, simulateContract } from "wagmi/actions";
+import { wagmiConfig } from "@/wagmiConfig";
+import { generateMessage } from "@/utils/message";
 
 const { abi: RPS_ABI } = RPSContract;
 const TIMEOUT = 300_000;
 
 const useActiveGame = () => {
   const [isActionPending, setIsActionPending] = useState<boolean>(false);
-
-  const { userGame } = useGames();
+  const [solveTxError, setSolveTxError] = useState<string>("");
+  const { userGame, removeGame } = useGames();
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
 
@@ -51,6 +54,52 @@ const useActiveGame = () => {
     }
   };
 
+  const solve = async (move: number) => {
+    if (!userGame) return;
+    setIsActionPending(true);
+    setSolveTxError("");
+    try {
+      //Generate the same salt used when creating the game.
+      const signature = await signMessage(wagmiConfig, {
+        message: generateMessage(
+          move,
+          userGame.player1,
+          userGame.player2,
+          userGame.stake,
+          userGame.randomValue
+        ),
+      });
+
+      const salt = keccak256(signature);
+      console.log("## SOLVE GAME SALT: ", salt);
+
+      try {
+        await simulateContract(wagmiConfig, {
+          abi: RPS_ABI,
+          address: userGame.address,
+          functionName: "solve",
+          args: [move, salt],
+        });
+      } catch {
+        setSolveTxError(
+          "Transaction will fail. Make sure you select the move you committed to!"
+        );
+        return;
+      }
+
+      await writeContractAsync({
+        abi: RPS_ABI,
+        address: userGame.address,
+        functionName: "solve",
+        args: [move, salt],
+      });
+
+      removeGame(userGame);
+    } finally {
+      setIsActionPending(false);
+    }
+  };
+
   const now = Date.now();
   const timeoutTime = Number(lastAction) * 1000 + TIMEOUT;
   const isPlayer2Turn = c2 === 0;
@@ -67,7 +116,9 @@ const useActiveGame = () => {
     hasPlayer1TimedOut: !isPlayer2Turn && now > timeoutTime,
     hasPlayer2TimedOut: isPlayer2Turn && now > timeoutTime,
     timeoutDate: new Date(timeoutTime),
+    solveTxError,
     play,
+    solve,
   };
 };
 

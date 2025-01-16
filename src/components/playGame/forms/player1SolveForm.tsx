@@ -4,26 +4,27 @@ import MoveSelector from "@/components/common/moveSelector";
 import useActiveGame from "@/hooks/useActiveGame";
 import { Move } from "@/model/move";
 
-const Player2MoveForm: FC = () => {
+const Player1SolveForm: FC = () => {
   const [selectedMove, setSelectedMove] = useState<Move>(Move.Rock);
-  const { isActionPending, play } = useActiveGame();
+  const { isActionPending, solveTxError, solve } = useActiveGame();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    play(selectedMove);
+    solve(selectedMove);
   };
 
   return (
     <div className={styles.formContainer}>
-      <h2>Play your move</h2>
+      <h2>Solve the game</h2>
       <form className={styles.actionForm} onSubmit={handleSubmit}>
         <MoveSelector value={selectedMove} onChange={setSelectedMove} />
         <button type="submit" disabled={isActionPending}>
-          {isActionPending ? "Playing..." : "Play"}
+          {isActionPending ? "Solving..." : "Solve"}
         </button>
       </form>
+      {solveTxError && <b>{solveTxError}</b>}
     </div>
   );
 };
 
-export default Player2MoveForm;
+export default Player1SolveForm;

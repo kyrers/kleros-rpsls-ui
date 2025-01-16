@@ -2,6 +2,7 @@ import { FC, useMemo } from "react";
 import styles from "./playGame.module.css";
 import useActiveGame from "@/hooks/useActiveGame";
 import Player2MoveForm from "./forms/player2MoveForm";
+import Player1SolveForm from "./forms/player1SolveForm";
 
 const PlayGame: FC = () => {
   const {
@@ -45,8 +46,9 @@ const PlayGame: FC = () => {
   return (
     <div className={styles.gameActionsPanel}>
       <h2>{gameInfoMessage}</h2>
+      {isTurn && <hr />}
       {!isPlayer1 && isTurn && !hasPlayer2TimedOut && <Player2MoveForm />}
-      {isPlayer1 && isTurn && !hasPlayer1TimedOut && <>Player 1 Solve</>}
+      {isPlayer1 && isTurn && !hasPlayer1TimedOut && <Player1SolveForm />}
       {!isPlayer1 && hasPlayer1TimedOut && <>Timeout Player 1</>}
       {isPlayer1 && hasPlayer2TimedOut && <>Timeout Player 2</>}
     </div>
