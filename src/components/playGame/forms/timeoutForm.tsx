@@ -11,7 +11,9 @@ const TimeoutForm: FC = () => {
   };
 
   return (
-    <div className={styles.actionContainer}>
+    <div
+      className={`${styles.actionForm} ${isActionPending && styles.loading}`}
+    >
       <h2>Finish the game</h2>
       <button onClick={handleTimeoutClick} disabled={isActionPending}>
         {isActionPending ? "Finishing..." : "Finish"}

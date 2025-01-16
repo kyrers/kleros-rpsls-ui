@@ -16,7 +16,10 @@ const Player2MoveForm: FC = () => {
   return (
     <div className={styles.actionContainer}>
       <h2>Play your move</h2>
-      <form className={styles.actionForm} onSubmit={handleSubmit}>
+      <form
+        className={`${styles.actionForm} ${isActionPending && styles.loading}`}
+        onSubmit={handleSubmit}
+      >
         <MoveSelector value={selectedMove} onChange={setSelectedMove} />
         <button type="submit" disabled={isActionPending}>
           {isActionPending ? "Playing..." : "Play"}

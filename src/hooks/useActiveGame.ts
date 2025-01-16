@@ -1,9 +1,14 @@
-import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import RPSContract from "@/contracts/RPS.json";
 import useGames from "./useGames";
 import { keccak256, parseEther } from "viem";
 import { useState } from "react";
-import { signMessage, simulateContract } from "wagmi/actions";
+import {
+  signMessage,
+  simulateContract,
+  waitForTransactionReceipt,
+  writeContract,
+} from "wagmi/actions";
 import { wagmiConfig } from "@/wagmiConfig";
 import { generateMessage } from "@/utils/message";
 
@@ -15,7 +20,6 @@ const useActiveGame = () => {
   const [solveTxError, setSolveTxError] = useState<string>("");
   const { userGame, removeGame } = useGames();
   const { address } = useAccount();
-  const { writeContractAsync } = useWriteContract();
 
   const { data: c2, refetch: refetchC2 } = useReadContract({
     abi: RPS_ABI,
@@ -39,13 +43,14 @@ const useActiveGame = () => {
     if (!userGame) return;
     setIsActionPending(true);
     try {
-      await writeContractAsync({
+      const txHash = await writeContract(wagmiConfig, {
         abi: RPS_ABI,
         address: userGame.address,
         functionName: "play",
         args: [move],
         value: parseEther(userGame.stake.toString()),
       });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
 
       refetchC2();
       refetchLastAction();
@@ -72,26 +77,22 @@ const useActiveGame = () => {
 
       const salt = keccak256(signature);
 
-      try {
-        await simulateContract(wagmiConfig, {
-          abi: RPS_ABI,
-          address: userGame.address,
-          functionName: "solve",
-          args: [move, salt],
-        });
-      } catch {
-        setSolveTxError(
-          "Transaction will fail. Make sure you select the move you committed to!"
-        );
-        return;
-      }
-
-      await writeContractAsync({
+      const txParams = {
         abi: RPS_ABI,
         address: userGame.address,
         functionName: "solve",
         args: [move, salt],
-      });
+      };
+
+      try {
+        await simulateContract(wagmiConfig, txParams);
+      } catch {
+        setSolveTxError("Transaction will fail");
+        return;
+      }
+
+      const txHash = await writeContract(wagmiConfig, txParams);
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
 
       removeGame(userGame);
     } finally {
@@ -104,11 +105,12 @@ const useActiveGame = () => {
     setIsActionPending(true);
 
     try {
-      await writeContractAsync({
+      const txHash = await writeContract(wagmiConfig, {
         abi: RPS_ABI,
         address: userGame.address,
         functionName: isPlayer1 ? "j2Timeout" : "j1Timeout",
       });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
 
       removeGame(userGame);
     } finally {

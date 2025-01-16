@@ -25,6 +25,11 @@
   gap: 5px;
 }
 
+.loading {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
 @media (max-width: 600px) {
   .page {
     padding: 32px;
