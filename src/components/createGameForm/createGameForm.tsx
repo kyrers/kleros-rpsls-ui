@@ -31,7 +31,7 @@ const CreateGameForm: FC = () => {
   };
 
   return (
-    <div className={styles.formContainer}>
+    <div className={styles.actionContainer}>
       <h2>Create Game</h2>
       <form className={styles.actionForm} onSubmit={handleSubmit}>
         <MoveSelector value={selectedMove} onChange={setSelectedMove} />

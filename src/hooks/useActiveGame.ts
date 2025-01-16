@@ -71,7 +71,6 @@ const useActiveGame = () => {
       });
 
       const salt = keccak256(signature);
-      console.log("## SOLVE GAME SALT: ", salt);
 
       try {
         await simulateContract(wagmiConfig, {
@@ -100,6 +99,23 @@ const useActiveGame = () => {
     }
   };
 
+  const timeout = async (isPlayer1: boolean) => {
+    if (!userGame) return;
+    setIsActionPending(true);
+
+    try {
+      await writeContractAsync({
+        abi: RPS_ABI,
+        address: userGame.address,
+        functionName: isPlayer1 ? "j2Timeout" : "j1Timeout",
+      });
+
+      removeGame(userGame);
+    } finally {
+      setIsActionPending(false);
+    }
+  };
+
   const now = Date.now();
   const timeoutTime = Number(lastAction) * 1000 + TIMEOUT;
   const isPlayer2Turn = c2 === 0;
@@ -119,6 +135,7 @@ const useActiveGame = () => {
     solveTxError,
     play,
     solve,
+    timeout,
   };
 };
 

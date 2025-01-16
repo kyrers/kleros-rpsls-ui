@@ -14,7 +14,7 @@ const Player2MoveForm: FC = () => {
   };
 
   return (
-    <div className={styles.formContainer}>
+    <div className={styles.actionContainer}>
       <h2>Play your move</h2>
       <form className={styles.actionForm} onSubmit={handleSubmit}>
         <MoveSelector value={selectedMove} onChange={setSelectedMove} />

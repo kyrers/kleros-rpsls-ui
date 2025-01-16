@@ -14,7 +14,7 @@ const Player1SolveForm: FC = () => {
   };
 
   return (
-    <div className={styles.formContainer}>
+    <div className={styles.actionContainer}>
       <h2>Solve the game</h2>
       <form className={styles.actionForm} onSubmit={handleSubmit}>
         <MoveSelector value={selectedMove} onChange={setSelectedMove} />
