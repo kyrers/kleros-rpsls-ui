@@ -139,6 +139,7 @@ const useActiveGame = () => {
         await simulateContract(wagmiConfig, txParams);
       } catch {
         setTimeoutTxError("Transaction will fail!");
+        setIsActionPending(false);
         return;
       }
 
