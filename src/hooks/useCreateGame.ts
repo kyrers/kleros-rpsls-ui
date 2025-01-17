@@ -82,6 +82,7 @@ export default function useCreateGame() {
       });
     } catch (error) {
       console.error("## Error deploying contract:", error);
+      setIsDeploying(false);
     }
   };
 

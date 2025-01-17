@@ -120,6 +120,7 @@ const useActiveGame = () => {
       removeGame(userGame);
     } catch (error) {
       console.error("## Error solving:", error);
+      setIsActionPending(false);
     }
   };
 
@@ -148,6 +149,7 @@ const useActiveGame = () => {
       removeGame(userGame);
     } catch (error) {
       console.error("## Error calling timeout:", error);
+      setIsActionPending(false);
     }
   };
 
