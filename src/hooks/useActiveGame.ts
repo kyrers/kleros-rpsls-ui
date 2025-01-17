@@ -2,7 +2,7 @@ import { useAccount, useReadContract } from "wagmi";
 import RPSContract from "@/contracts/RPS.json";
 import useGames from "./useGames";
 import { keccak256, parseEther } from "viem";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   signMessage,
   simulateContract,
@@ -41,6 +41,14 @@ const useActiveGame = () => {
     },
   });
 
+  useEffect(() => {
+    if (!userGame) {
+      //To prevent the UI being out of sync while the local storage is being updated, only set to false when the game has been removed from local storage.
+      //Useful for the solve and timeout functions.
+      setIsActionPending(false);
+    }
+  }, [userGame]);
+
   const play = async (move: number) => {
     if (!userGame) return;
     setIsActionPending(true);
@@ -64,8 +72,10 @@ const useActiveGame = () => {
 
       const txHash = await writeContract(wagmiConfig, txParams);
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-      refetchC2();
-      refetchLastAction();
+      await refetchC2();
+      await refetchLastAction();
+    } catch (error) {
+      console.error("## Error playing:", error);
     } finally {
       setIsActionPending(false);
     }
@@ -101,14 +111,15 @@ const useActiveGame = () => {
         await simulateContract(wagmiConfig, txParams);
       } catch {
         setSolveTxError("Transaction will fail!");
+        setIsActionPending(false);
         return;
       }
 
       const txHash = await writeContract(wagmiConfig, txParams);
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       removeGame(userGame);
-    } finally {
-      setIsActionPending(false);
+    } catch (error) {
+      console.error("## Error solving:", error);
     }
   };
 
@@ -134,19 +145,22 @@ const useActiveGame = () => {
       const txHash = await writeContract(wagmiConfig, txParams);
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       removeGame(userGame);
-    } finally {
-      setIsActionPending(false);
+    } catch (error) {
+      console.error("## Error calling timeout:", error);
     }
   };
 
   const now = Date.now();
   const timeoutTime = Number(lastAction) * 1000 + TIMEOUT;
-  const isPlayer2Turn = c2 === 0;
+  //Means we are interacting with the contract correctly and the game is ready to be played
+  const isGameReady = c2 !== undefined;
+  const isPlayer2Turn = isGameReady && c2 === 0;
   const isPlayer1 = address === userGame?.player1;
-  const isTurn = isPlayer1 ? !isPlayer2Turn : isPlayer2Turn;
+  const isTurn = isGameReady && (isPlayer1 ? !isPlayer2Turn : isPlayer2Turn);
   const opponent = isPlayer1 ? userGame?.player2 : userGame?.player1;
 
   return {
+    isGameReady,
     isPlayer1,
     isTurn,
     opponent,

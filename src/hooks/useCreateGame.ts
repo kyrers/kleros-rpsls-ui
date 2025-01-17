@@ -10,7 +10,7 @@ import { generateMessage } from "@/utils/message";
 import useGames from "./useGames";
 import RPSContract from "@/contracts/RPS.json";
 import HasherContract from "@/contracts/Hasher.json";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface NewGameArguments {
   move: number;
@@ -24,7 +24,14 @@ const { abi: HASHER_ABI } = HasherContract;
 
 export default function useCreateGame() {
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
-  const { addGame } = useGames();
+  const { userGame, addGame } = useGames();
+
+  useEffect(() => {
+    if (!!userGame) {
+      //To prevent the UI being out of sync while the local storage is being updated, only set to false when the game has been added to local storage.
+      setIsDeploying(false);
+    }
+  }, [userGame]);
 
   const deployGame = async (args: NewGameArguments) => {
     setIsDeploying(true);
@@ -75,8 +82,6 @@ export default function useCreateGame() {
       });
     } catch (error) {
       console.error("## Error deploying contract:", error);
-    } finally {
-      setIsDeploying(false);
     }
   };
 

@@ -7,6 +7,7 @@ import TimeoutForm from "./forms/timeoutForm";
 
 const PlayGame: FC = () => {
   const {
+    isGameReady,
     isPlayer1,
     isTurn,
     opponent,
@@ -17,6 +18,10 @@ const PlayGame: FC = () => {
   } = useActiveGame();
 
   const gameInfoMessage = useMemo(() => {
+    if (!isGameReady) {
+      return "Finishing setting the game up...";
+    }
+
     if (
       (isPlayer1 && hasPlayer1TimedOut) ||
       (!isPlayer1 && hasPlayer2TimedOut)
@@ -35,13 +40,14 @@ const PlayGame: FC = () => {
       isTurn ? "your" : "their"
     } turn. The timeout is ${timeoutDate.toUTCString()}.`;
   }, [
+    isPlayer1,
     hasPlayer1TimedOut,
     hasPlayer2TimedOut,
-    isPlayer1,
-    isTurn,
-    timeoutDate,
+    isGameReady,
     opponent,
     stake,
+    isTurn,
+    timeoutDate,
   ]);
 
   return (
