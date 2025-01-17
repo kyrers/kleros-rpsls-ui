@@ -3,7 +3,8 @@ import styles from "@/app/page.module.css";
 import useActiveGame from "@/hooks/useActiveGame";
 
 const TimeoutForm: FC = () => {
-  const { isActionPending, isPlayer1, timeout } = useActiveGame();
+  const { isPlayer1, isActionPending, timeoutTxError, timeout } =
+    useActiveGame();
 
   const handleTimeoutClick = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,6 +19,7 @@ const TimeoutForm: FC = () => {
       <button onClick={handleTimeoutClick} disabled={isActionPending}>
         {isActionPending ? "Finishing..." : "Finish"}
       </button>
+      {timeoutTxError && <b>{timeoutTxError}</b>}
     </div>
   );
 };

@@ -33,7 +33,10 @@ const CreateGameForm: FC = () => {
   return (
     <div className={styles.actionContainer}>
       <h2>Create Game</h2>
-      <form className={styles.actionForm} onSubmit={handleSubmit}>
+      <form
+        className={`${styles.actionForm} ${isDeploying && styles.loading}`}
+        onSubmit={handleSubmit}
+      >
         <MoveSelector value={selectedMove} onChange={setSelectedMove} />
 
         <div>

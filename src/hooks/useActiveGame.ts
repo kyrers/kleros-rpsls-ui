@@ -17,7 +17,9 @@ const TIMEOUT = 300_000;
 
 const useActiveGame = () => {
   const [isActionPending, setIsActionPending] = useState<boolean>(false);
+  const [playTxError, setPlayTxError] = useState<string>("");
   const [solveTxError, setSolveTxError] = useState<string>("");
+  const [timeoutTxError, setTimeoutTxError] = useState<string>("");
   const { userGame, removeGame } = useGames();
   const { address } = useAccount();
 
@@ -42,16 +44,26 @@ const useActiveGame = () => {
   const play = async (move: number) => {
     if (!userGame) return;
     setIsActionPending(true);
+    setPlayTxError("");
+
     try {
-      const txHash = await writeContract(wagmiConfig, {
+      const txParams = {
         abi: RPS_ABI,
         address: userGame.address,
         functionName: "play",
         args: [move],
         value: parseEther(userGame.stake.toString()),
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+      };
 
+      try {
+        await simulateContract(wagmiConfig, txParams);
+      } catch {
+        setPlayTxError("Transaction will fail!");
+        return;
+      }
+
+      const txHash = await writeContract(wagmiConfig, txParams);
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       refetchC2();
       refetchLastAction();
     } finally {
@@ -63,6 +75,7 @@ const useActiveGame = () => {
     if (!userGame) return;
     setIsActionPending(true);
     setSolveTxError("");
+
     try {
       //Generate the same salt used when creating the game.
       const signature = await signMessage(wagmiConfig, {
@@ -87,13 +100,12 @@ const useActiveGame = () => {
       try {
         await simulateContract(wagmiConfig, txParams);
       } catch {
-        setSolveTxError("Transaction will fail");
+        setSolveTxError("Transaction will fail!");
         return;
       }
 
       const txHash = await writeContract(wagmiConfig, txParams);
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-
       removeGame(userGame);
     } finally {
       setIsActionPending(false);
@@ -103,15 +115,24 @@ const useActiveGame = () => {
   const timeout = async (isPlayer1: boolean) => {
     if (!userGame) return;
     setIsActionPending(true);
+    setTimeoutTxError("");
 
     try {
-      const txHash = await writeContract(wagmiConfig, {
+      const txParams = {
         abi: RPS_ABI,
         address: userGame.address,
         functionName: isPlayer1 ? "j2Timeout" : "j1Timeout",
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+      };
 
+      try {
+        await simulateContract(wagmiConfig, txParams);
+      } catch {
+        setTimeoutTxError("Transaction will fail!");
+        return;
+      }
+
+      const txHash = await writeContract(wagmiConfig, txParams);
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       removeGame(userGame);
     } finally {
       setIsActionPending(false);
@@ -134,7 +155,9 @@ const useActiveGame = () => {
     hasPlayer1TimedOut: !isPlayer2Turn && now > timeoutTime,
     hasPlayer2TimedOut: isPlayer2Turn && now > timeoutTime,
     timeoutDate: new Date(timeoutTime),
+    playTxError,
     solveTxError,
+    timeoutTxError,
     play,
     solve,
     timeout,

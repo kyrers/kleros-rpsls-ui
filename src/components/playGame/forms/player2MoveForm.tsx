@@ -6,7 +6,7 @@ import { Move } from "@/model/move";
 
 const Player2MoveForm: FC = () => {
   const [selectedMove, setSelectedMove] = useState<Move>(Move.Rock);
-  const { isActionPending, play } = useActiveGame();
+  const { playTxError, isActionPending, play } = useActiveGame();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +25,7 @@ const Player2MoveForm: FC = () => {
           {isActionPending ? "Playing..." : "Play"}
         </button>
       </form>
+      {playTxError && <b>{playTxError}</b>}
     </div>
   );
 };
