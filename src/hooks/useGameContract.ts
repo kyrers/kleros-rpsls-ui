@@ -1,6 +1,5 @@
 import { useAccount, useReadContract } from "wagmi";
 import RPSContract from "@/contracts/RPS.json";
-import useGames from "./useGames";
 import { keccak256, parseEther } from "viem";
 import { useEffect, useState } from "react";
 import {
@@ -11,48 +10,60 @@ import {
 } from "wagmi/actions";
 import { wagmiConfig } from "@/wagmiConfig";
 import { generateMessage } from "@/utils/message";
+import useGameDataActions from "./useGameDataActions";
+import { useUserGame } from "@/contexts/userGameProvider";
+
+interface TimeoutData {
+  hasPlayer1TimedOut: boolean;
+  hasPlayer2TimedOut: boolean;
+  timeoutDate: Date;
+}
 
 const { abi: RPS_ABI } = RPSContract;
 const TIMEOUT = 300_000;
 
-const useActiveGame = () => {
+const useGameContract = () => {
   const [isActionPending, setIsActionPending] = useState<boolean>(false);
-  const [playTxError, setPlayTxError] = useState<string>("");
-  const [solveTxError, setSolveTxError] = useState<string>("");
-  const [timeoutTxError, setTimeoutTxError] = useState<string>("");
-  const { userGame, removeGame } = useGames();
+  const [timeoutData, setTimeoutData] = useState<TimeoutData>({
+    hasPlayer1TimedOut: false,
+    hasPlayer2TimedOut: false,
+    timeoutDate: new Date(),
+  });
+  const { userGame } = useUserGame();
+  const { removeGame } = useGameDataActions();
   const { address } = useAccount();
 
-  const { data: c2, refetch: refetchC2 } = useReadContract({
+  const {
+    data: c2,
+    refetch: refetchC2,
+    isFetching: isFetchingC2,
+  } = useReadContract({
     abi: RPS_ABI,
     address: userGame?.address,
     functionName: "c2",
     query: {
       enabled: !!userGame,
+      refetchInterval: 30000,
     },
   });
 
-  const { data: lastAction, refetch: refetchLastAction } = useReadContract({
+  const {
+    data: lastAction,
+    refetch: refetchLastAction,
+    isFetching: isFetchingLastAction,
+  } = useReadContract({
     abi: RPS_ABI,
     address: userGame?.address,
     functionName: "lastAction",
     query: {
       enabled: !!userGame,
+      refetchInterval: 30000,
     },
   });
-
-  useEffect(() => {
-    if (!userGame) {
-      //To prevent the UI being out of sync while the local storage is being updated, only set to false when the game has been removed from local storage.
-      //Useful for the solve and timeout functions.
-      setIsActionPending(false);
-    }
-  }, [userGame]);
 
   const play = async (move: number) => {
     if (!userGame) return;
     setIsActionPending(true);
-    setPlayTxError("");
 
     try {
       const txParams = {
@@ -66,7 +77,7 @@ const useActiveGame = () => {
       try {
         await simulateContract(wagmiConfig, txParams);
       } catch {
-        setPlayTxError("Transaction will fail!");
+        alert("Transaction will fail!");
         return;
       }
 
@@ -84,7 +95,6 @@ const useActiveGame = () => {
   const solve = async (move: number) => {
     if (!userGame) return;
     setIsActionPending(true);
-    setSolveTxError("");
 
     try {
       //Generate the same salt used when creating the game.
@@ -94,7 +104,7 @@ const useActiveGame = () => {
           userGame.player1,
           userGame.player2,
           userGame.stake,
-          userGame.randomValue
+          userGame.random_value
         ),
       });
 
@@ -110,16 +120,17 @@ const useActiveGame = () => {
       try {
         await simulateContract(wagmiConfig, txParams);
       } catch {
-        setSolveTxError("Transaction will fail!");
-        setIsActionPending(false);
+        alert("Transaction will fail!");
         return;
       }
 
       const txHash = await writeContract(wagmiConfig, txParams);
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-      removeGame(userGame);
+      await removeGame.mutateAsync(userGame.address);
     } catch (error) {
+      alert(error);
       console.error("## Error solving:", error);
+    } finally {
       setIsActionPending(false);
     }
   };
@@ -127,7 +138,6 @@ const useActiveGame = () => {
   const timeout = async (isPlayer1: boolean) => {
     if (!userGame) return;
     setIsActionPending(true);
-    setTimeoutTxError("");
 
     try {
       const txParams = {
@@ -139,28 +149,40 @@ const useActiveGame = () => {
       try {
         await simulateContract(wagmiConfig, txParams);
       } catch {
-        setTimeoutTxError("Transaction will fail!");
-        setIsActionPending(false);
+        alert("Transaction will fail!");
         return;
       }
 
       const txHash = await writeContract(wagmiConfig, txParams);
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-      removeGame(userGame);
+      await removeGame.mutateAsync(userGame.address);
     } catch (error) {
+      alert(error);
       console.error("## Error calling timeout:", error);
+    } finally {
       setIsActionPending(false);
     }
   };
 
-  const now = Date.now();
-  const timeoutTime = Number(lastAction) * 1000 + TIMEOUT;
   //Means we are interacting with the contract correctly and the game is ready to be played
   const isGameReady = c2 !== undefined;
   const isPlayer2Turn = isGameReady && c2 === 0;
   const isPlayer1 = address === userGame?.player1;
   const isTurn = isGameReady && (isPlayer1 ? !isPlayer2Turn : isPlayer2Turn);
   const opponent = isPlayer1 ? userGame?.player2 : userGame?.player1;
+
+  useEffect(() => {
+    //Only recalculate when both are finished refetching
+    if (!isFetchingC2 && !isFetchingLastAction) {
+      const now = Date.now();
+      const timeoutTime = Number(lastAction) * 1000 + TIMEOUT;
+      setTimeoutData({
+        hasPlayer1TimedOut: !isPlayer2Turn && now > timeoutTime,
+        hasPlayer2TimedOut: isPlayer2Turn && now > timeoutTime,
+        timeoutDate: new Date(timeoutTime),
+      });
+    }
+  }, [isFetchingC2, isFetchingLastAction, isPlayer2Turn, lastAction]);
 
   return {
     isGameReady,
@@ -169,16 +191,13 @@ const useActiveGame = () => {
     opponent,
     stake: userGame?.stake,
     isActionPending,
-    hasPlayer1TimedOut: !isPlayer2Turn && now > timeoutTime,
-    hasPlayer2TimedOut: isPlayer2Turn && now > timeoutTime,
-    timeoutDate: new Date(timeoutTime),
-    playTxError,
-    solveTxError,
-    timeoutTxError,
+    hasPlayer1TimedOut: timeoutData.hasPlayer1TimedOut,
+    hasPlayer2TimedOut: timeoutData.hasPlayer2TimedOut,
+    timeoutDate: timeoutData.timeoutDate,
     play,
     solve,
     timeout,
   };
 };
 
-export default useActiveGame;
+export default useGameContract;

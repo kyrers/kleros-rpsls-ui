@@ -1,12 +1,12 @@
 import { FC, useState } from "react";
 import styles from "@/app/page.module.css";
 import MoveSelector from "@/components/common/moveSelector";
-import useActiveGame from "@/hooks/useActiveGame";
 import { Move } from "@/model/move";
+import useGameContract from "@/hooks/useGameContract";
 
 const Player1SolveForm: FC = () => {
   const [selectedMove, setSelectedMove] = useState<Move>(Move.Rock);
-  const { isActionPending, solveTxError, solve } = useActiveGame();
+  const { isActionPending, solve } = useGameContract();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +25,6 @@ const Player1SolveForm: FC = () => {
           {isActionPending ? "Solving..." : "Solve"}
         </button>
       </form>
-      {solveTxError && <b>{solveTxError}</b>}
     </div>
   );
 };

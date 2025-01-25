@@ -12,7 +12,7 @@ const CreateGameForm: FC = () => {
   const [stake, setStake] = useState<number>(0.01);
   const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
 
-  const { address, isConnected } = useAccount();
+  const { address } = useAccount();
   const { isDeploying, deployGame } = useCreateGame();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,9 +68,7 @@ const CreateGameForm: FC = () => {
 
         <button
           type="submit"
-          disabled={
-            isDeploying || !isConnected || !isValidAddress || stake <= 0
-          }
+          disabled={isDeploying || !isValidAddress || stake <= 0}
         >
           {isDeploying ? "Creating..." : "Create"}
         </button>

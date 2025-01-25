@@ -1,6 +1,6 @@
 import { FC, useMemo } from "react";
 import styles from "./playGame.module.css";
-import useActiveGame from "@/hooks/useActiveGame";
+import useGameContract from "@/hooks/useGameContract";
 import Player2MoveForm from "./forms/player2MoveForm";
 import Player1SolveForm from "./forms/player1SolveForm";
 import TimeoutForm from "./forms/timeoutForm";
@@ -15,7 +15,7 @@ const PlayGame: FC = () => {
     hasPlayer1TimedOut,
     hasPlayer2TimedOut,
     timeoutDate,
-  } = useActiveGame();
+  } = useGameContract();
 
   const gameInfoMessage = useMemo(() => {
     if (!isGameReady) {

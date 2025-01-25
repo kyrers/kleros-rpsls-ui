@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { wagmiConfig } from "@/wagmiConfig";
+import { UserGameProvider } from "@/contexts/userGameProvider";
 
 const queryClient = new QueryClient();
 
@@ -13,8 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          {/* Wrap in <></> because https://github.com/vercel/next.js/discussions/64753 */}
-          <>{children}</>
+          <UserGameProvider>{children}</UserGameProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

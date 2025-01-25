@@ -7,10 +7,10 @@ import {
   waitForTransactionReceipt,
 } from "wagmi/actions";
 import { generateMessage } from "@/utils/message";
-import useGames from "./useGames";
 import RPSContract from "@/contracts/RPS.json";
 import HasherContract from "@/contracts/Hasher.json";
 import { useState } from "react";
+import useGameActions from "./useGameDataActions";
 
 interface NewGameArguments {
   move: number;
@@ -24,7 +24,7 @@ const { abi: HASHER_ABI } = HasherContract;
 
 export default function useCreateGame() {
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
-  const { addGame } = useGames();
+  const { addGame } = useGameActions();
 
   const deployGame = async (args: NewGameArguments) => {
     setIsDeploying(true);
@@ -71,7 +71,7 @@ export default function useCreateGame() {
         player1: args.player1 as `0x${string}`,
         player2: args.player2 as `0x${string}`,
         stake: args.stake,
-        randomValue: formattedRandomValue,
+        random_value: formattedRandomValue,
       });
     } catch (error) {
       alert(error);

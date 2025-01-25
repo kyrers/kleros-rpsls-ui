@@ -1,28 +1,9 @@
+import { Game } from "@/model/game";
 import { MUTATION_KEYS, QUERY_KEYS } from "@/utils/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAccount } from "wagmi";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface Game {
-  address: `0x${string}`;
-  player1: `0x${string}`;
-  player2: `0x${string}`;
-  stake: number;
-  randomValue: string;
-}
-
-const useGames = () => {
+const useGameDataActions = () => {
   const queryClient = useQueryClient();
-  const { address } = useAccount();
-
-  const { data: userGame } = useQuery<Game>({
-    queryKey: [QUERY_KEYS.getWalletGame, address],
-    queryFn: async () => {
-      return await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/games?player=${address}`
-      ).then((res) => res.json());
-    },
-    enabled: !!address,
-  });
 
   const addGame = useMutation({
     mutationKey: [MUTATION_KEYS.createGame],
@@ -72,7 +53,7 @@ const useGames = () => {
         throw errorData?.error ?? "Unexpected error";
       }
 
-      return response.json();
+      return response.text();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -85,10 +66,9 @@ const useGames = () => {
   });
 
   return {
-    userGame,
     addGame,
     removeGame,
   };
 };
 
-export default useGames;
+export default useGameDataActions;
